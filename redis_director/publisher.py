@@ -124,7 +124,7 @@ class Publisher:
         while True:
             yield self.random_subscriber
 
-    def add_payloads(self, *payloads: str):
+    def add_payloads(self, *payloads):
         if self.__add_payloads_callback == None:
             raise TypeError("`add_payloads_callback` not provided!")
 
