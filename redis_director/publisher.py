@@ -1,6 +1,11 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Iterable, List
 from fun_things.math import weighted_distribution
 from redis import Redis
+
+from redis_director.callback import (
+    generic_sadd_callback,
+    generic_spop_callback,
+)
 
 from .subscriber import Subscriber
 
@@ -11,12 +16,34 @@ class Publisher:
         redis: Redis,
         score_key: str,
         queue_key: str,
+        add_payloads_callback: Callable[
+            [
+                "Publisher",
+                Iterable[str],
+            ],
+            None,
+        ] = None,  # type: ignore
+        pop_payloads_callback: Callable[
+            [
+                "Publisher",
+                int,
+            ],
+            List[str],
+        ] = None,  # type: ignore
     ):
         self.__subscribers: Dict[str, Subscriber] = {}
 
         self.__redis = redis
         self.__score_key: str = score_key
         self.__queue_key: str = queue_key
+        self.__add_payloads_callback = add_payloads_callback
+        self.__pop_payloads_callback = pop_payloads_callback
+
+        if add_payloads_callback == None:
+            self.__add_payloads_callback = generic_sadd_callback
+
+        if pop_payloads_callback == None:
+            self.__pop_payloads_callback = generic_spop_callback
 
     @property
     def redis(self):
@@ -66,12 +93,57 @@ class Publisher:
 
         return self.__subscribers[member]
 
+    @property
+    def random_subscriber(self):
+        """
+        Returns 1 random subscriber
+        based on their scores.
+
+        The higher score has the higher chance
+        of being chosen.
+        """
+        subscribers = weighted_distribution(
+            self.__subscribers.values(),
+            lambda subscriber: subscriber.score,
+        )
+
+        for subscriber in subscribers:
+            return subscriber
+
+        raise ValueError("No subscribers found!")
+
+    @property
+    def random_subscribers(self):
+        """
+        Infinitely returns a random subscriber
+        based on their scores.
+
+        The higher score has the higher chance
+        of being chosen.
+        """
+        while True:
+            yield self.random_subscriber
+
+    def add_payloads(self, *payloads: str):
+        if self.__add_payloads_callback == None:
+            raise TypeError("`add_payloads_callback` not provided!")
+
+        self.__add_payloads_callback(
+            self,
+            payloads,
+        )
+
+        return self
+
     def publish(
         self,
         batch_size=1,
     ):
-        payloads = self.__redis.spop(
-            self.__queue_key,
+        if self.__pop_payloads_callback == None:
+            raise TypeError("`pop_payloads_callback` not provided!")
+
+        payloads = self.__pop_payloads_callback(
+            self,
             batch_size,
         )
 
@@ -79,12 +151,7 @@ class Publisher:
             return self
 
         for payload in payloads:
-            subscribers = weighted_distribution(
-                self.__subscribers.values(),
-                lambda subscriber: subscriber.score,
-            )
-
-            for subscriber in subscribers:
+            for subscriber in self.random_subscribers:
                 if subscriber.handler != None:
                     subscriber.handler(subscriber, payload)
 
