@@ -2,11 +2,6 @@ from typing import Any, Callable, Dict, Iterable, List
 from fun_things.math import weighted_distribution
 from redis import Redis
 
-from redis_director.callback import (
-    generic_sadd_callback,
-    generic_spop_callback,
-)
-
 from .subscriber import Subscriber
 
 
@@ -38,6 +33,11 @@ class Publisher:
         self.__queue_key: str = queue_key
         self.__add_payloads_callback = add_payloads_callback
         self.__pop_payloads_callback = pop_payloads_callback
+
+        from redis_director.callback import (
+            generic_sadd_callback,
+            generic_spop_callback,
+        )
 
         if add_payloads_callback == None:
             self.__add_payloads_callback = generic_sadd_callback
