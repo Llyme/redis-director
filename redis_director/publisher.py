@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable
 from fun_things.math import weighted_distribution
 from redis import Redis
 
@@ -14,7 +14,7 @@ class Publisher:
         add_payloads_callback: Callable[
             [
                 "Publisher",
-                Iterable[str],
+                Iterable,
             ],
             None,
         ] = None,  # type: ignore
@@ -23,7 +23,7 @@ class Publisher:
                 "Publisher",
                 int,
             ],
-            List[str],
+            list,
         ] = None,  # type: ignore
     ):
         self.__subscribers: Dict[str, Subscriber] = {}
@@ -36,14 +36,14 @@ class Publisher:
 
         from redis_director.callback import (
             generic_sadd_callback,
-            generic_spop_callback,
+            generic_srandpop_callback,
         )
 
         if add_payloads_callback == None:
             self.__add_payloads_callback = generic_sadd_callback
 
         if pop_payloads_callback == None:
-            self.__pop_payloads_callback = generic_spop_callback
+            self.__pop_payloads_callback = generic_srandpop_callback
 
     @property
     def redis(self):

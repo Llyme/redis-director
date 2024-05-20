@@ -6,4 +6,5 @@ from .callback import (
     generic_spop_callback,
     generic_rpush_callback,
     generic_sadd_callback,
+    generic_srandpop_callback,
 )

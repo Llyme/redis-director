@@ -27,3 +27,17 @@ redis.call('zadd', key, newScore, member)
 
 return newScore
 """
+
+# srandmember + spop
+SRANDPOP_LUA_SCRIPT = """
+local key = KEYS[1]
+local batchSize = ARGV[1]
+
+local items = redis.call('SRANDMEMBER', key, batchSize)
+
+for i, name in ipairs(items) do
+    redis.call('SREM', key, name)
+end
+
+return items
+"""

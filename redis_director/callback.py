@@ -1,5 +1,6 @@
 from typing import Iterable
 
+from redis_director.constants import SRANDPOP_LUA_SCRIPT
 from redis_director.publisher import Publisher
 
 
@@ -40,4 +41,16 @@ def generic_lpop_callback(
     return publisher.redis.lpop(
         publisher.queue_key,
         batch_size,
+    )
+
+
+def generic_srandpop_callback(
+    publisher: Publisher,
+    batch_size: int,
+):
+    publisher.redis.eval(
+        SRANDPOP_LUA_SCRIPT,
+        1,
+        publisher.queue_key,
+        batch_size,  # type: ignore
     )
