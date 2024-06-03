@@ -135,9 +135,9 @@ class Publisher:
 
         return self
 
-    def publish(
+    def __get_payloads(
         self,
-        batch_size=1,
+        batch_size: int,
     ):
         if self.__pop_payloads_callback == None:
             raise TypeError("`pop_payloads_callback` not provided!")
@@ -148,7 +148,68 @@ class Publisher:
         )
 
         if payloads == None:
-            return self
+            return []
+
+        return payloads
+
+    def publish_max(
+        self,
+        batch_size=1,
+    ):
+        """
+        Publishes to the subscriber with the highest score.
+        """
+        payloads = self.__get_payloads(batch_size)
+
+        for payload in payloads:
+            try:
+                subscriber = max(
+                    self.__subscribers.values(),
+                    key=lambda subscriber: subscriber.score,
+                )
+
+            except:
+                raise Exception("No subscribers found!")
+
+            if subscriber.handler == None:
+                continue
+
+            subscriber.handler(subscriber, payload)
+
+    def publish_min(
+        self,
+        batch_size=1,
+    ):
+        """
+        Publishes to the subscriber with the lowest score.
+        """
+        payloads = self.__get_payloads(batch_size)
+
+        for payload in payloads:
+            try:
+                subscriber = min(
+                    self.__subscribers.values(),
+                    key=lambda subscriber: subscriber.score,
+                )
+
+            except:
+                raise Exception("No subscribers found!")
+
+            if subscriber.handler == None:
+                continue
+
+            subscriber.handler(subscriber, payload)
+
+    def publish(
+        self,
+        batch_size=1,
+    ):
+        """
+        Publishes to a random subscriber.
+
+        High score increases the odds of being chosen.
+        """
+        payloads = self.__get_payloads(batch_size)
 
         for payload in payloads:
             for subscriber in self.random_subscribers:
