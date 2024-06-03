@@ -124,6 +124,38 @@ class Publisher:
         while True:
             yield self.random_subscriber
 
+    @property
+    def subscriber_max(self):
+        """
+        Returns the subscriber with the highest score.
+        """
+        try:
+            return max(
+                self.__subscribers.values(),
+                key=lambda subscriber: subscriber.score,
+            )
+
+        except:
+            pass
+
+        return None
+
+    @property
+    def subscriber_min(self):
+        """
+        Returns the subscriber with the lowest score.
+        """
+        try:
+            return min(
+                self.__subscribers.values(),
+                key=lambda subscriber: subscriber.score,
+            )
+
+        except:
+            pass
+
+        return None
+
     def add_payloads(self, *payloads):
         if self.__add_payloads_callback == None:
             raise TypeError("`add_payloads_callback` not provided!")
@@ -162,14 +194,10 @@ class Publisher:
         payloads = self.__get_payloads(batch_size)
 
         for payload in payloads:
-            try:
-                subscriber = max(
-                    self.__subscribers.values(),
-                    key=lambda subscriber: subscriber.score,
-                )
+            subscriber = self.subscriber_max
 
-            except:
-                raise Exception("No subscribers found!")
+            if subscriber == None:
+                continue
 
             if subscriber.handler == None:
                 continue
@@ -186,14 +214,10 @@ class Publisher:
         payloads = self.__get_payloads(batch_size)
 
         for payload in payloads:
-            try:
-                subscriber = min(
-                    self.__subscribers.values(),
-                    key=lambda subscriber: subscriber.score,
-                )
+            subscriber = self.subscriber_min
 
-            except:
-                raise Exception("No subscribers found!")
+            if subscriber == None:
+                continue
 
             if subscriber.handler == None:
                 continue
