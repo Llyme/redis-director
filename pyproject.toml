@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "redis-director"
-version = "0.7.3"
+version = "0.7.4"
 description = ""
 authors = ["MisterNyan <michael.edmund.wong@gmail.com>"]
 readme = "README.md"
@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 redis = "^5.0.4"
-fun-things = "^0.5.1"
+fun-things = "^0.7.1"
 
 
 [build-system]
